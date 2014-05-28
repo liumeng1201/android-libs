@@ -1,7 +1,10 @@
 package com.lm.lib.http_net_lib;
 
+import java.io.File;
+
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -34,6 +37,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 
 	private void requestString() {
+		String path = Environment.getExternalStorageDirectory()
+				+ File.separator + "test.txt";
 		Request request = new Request(UrlHelper.test_string_url,
 				Request.RequestMethod.GET);
 		request.setCallback(new StringCallback() {
@@ -44,9 +49,9 @@ public class MainActivity extends Activity implements OnClickListener {
 
 			@Override
 			public void onFailure(Exception result) {
-
+				result.printStackTrace();
 			}
-		});
+		}.setPath(path));
 		request.execute();
 	}
 

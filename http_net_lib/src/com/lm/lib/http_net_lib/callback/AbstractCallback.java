@@ -39,7 +39,7 @@ public abstract class AbstractCallback implements ICallback {
 							in = new InflaterInputStream(entity.getContent());
 						}
 					} else {
-						entity.getContent();
+						in = entity.getContent();
 					}
 					byte[] b = new byte[IO_BUFFER_SIZE];
 					int read;
@@ -70,4 +70,8 @@ public abstract class AbstractCallback implements ICallback {
 		return content;
 	}
 
+	public AbstractCallback setPath(String path) {
+		this.path = path;
+		return this;
+	}
 }
