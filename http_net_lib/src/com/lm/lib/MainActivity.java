@@ -1,4 +1,4 @@
-package com.lm.lib.http_net_lib;
+package com.lm.lib;
 
 import java.io.File;
 
@@ -10,11 +10,13 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.lm.lib.http_net_lib.R;
+import com.lm.lib.http_net_lib.Request;
 import com.lm.lib.http_net_lib.callback.StringCallback;
 import com.lm.lib.http_net_lib.utilities.UrlHelper;
 
 public class MainActivity extends Activity implements OnClickListener {
-	private Button btnString;
+	private Button btnString, btnJson;
 	private TextView tv;
 
 	@Override
@@ -24,6 +26,8 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		btnString = (Button) findViewById(R.id.btnString);
 		btnString.setOnClickListener(this);
+		btnJson = (Button) findViewById(R.id.btnJson);
+		btnJson.setOnClickListener(this);
 		tv = (TextView) findViewById(R.id.textview);
 	}
 
@@ -33,7 +37,27 @@ public class MainActivity extends Activity implements OnClickListener {
 		case R.id.btnString:
 			requestString();
 			break;
+		case R.id.btnJson:
+			requestJson();
+			break;
 		}
+	}
+
+	private void requestJson() {
+		Request request = new Request(UrlHelper.test_json_url,
+				Request.RequestMethod.GET);
+		request.setCallback(new StringCallback() {
+			@Override
+			public void onSuccess(Object result) {
+				tv.setText((String) result);
+			}
+
+			@Override
+			public void onFailure(Exception result) {
+				result.printStackTrace();
+			}
+		});
+		request.execute();
 	}
 
 	private void requestString() {
