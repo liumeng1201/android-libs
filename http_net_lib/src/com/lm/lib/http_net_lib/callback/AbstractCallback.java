@@ -3,6 +3,7 @@ package com.lm.lib.http_net_lib.callback;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -12,11 +13,14 @@ import org.apache.http.HttpStatus;
 import org.apache.http.ParseException;
 import org.apache.http.util.EntityUtils;
 
+import com.lm.lib.http_net_lib.Request;
 import com.lm.lib.http_net_lib.interfaces.ICallback;
 import com.lm.lib.http_net_lib.utilities.TextUtil;
 
-public abstract class AbstractCallback implements ICallback {
+public abstract class AbstractCallback<T> implements ICallback<T> {
 	public static final int IO_BUFFER_SIZE = 4 * 1024;
+	public Class<T> returnClass;
+	public Type returnType;
 	public String path;
 
 	public Object handle(HttpResponse response) {
@@ -52,7 +56,7 @@ public abstract class AbstractCallback implements ICallback {
 					in.close();
 					return bindData(path);
 				} else {
-					return bindData(EntityUtils.toString(entity));
+					return bindData(EntityUtils.toString(entity, Request.ENCODING));
 				}
 			default:
 				break;
@@ -66,12 +70,22 @@ public abstract class AbstractCallback implements ICallback {
 		return null;
 	}
 
-	protected Object bindData(String content) {
-		return content;
+	protected T bindData(String content) {
+		return null;
 	}
 
-	public AbstractCallback setPath(String path) {
+	public AbstractCallback<T> setPath(String path) {
 		this.path = path;
+		return this;
+	}
+	
+	public AbstractCallback<T> setReturnClass(Class<T> returnClass) {
+		this.returnClass = returnClass;
+		return this;
+	}
+	
+	public AbstractCallback<T> setReturnType(Type type) {
+		this.returnType = type;
 		return this;
 	}
 }

@@ -1,6 +1,7 @@
 package com.lm.lib.http_net_lib.test;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -10,8 +11,10 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.gson.reflect.TypeToken;
 import com.lm.lib.http_net_lib.R;
 import com.lm.lib.http_net_lib.Request;
+import com.lm.lib.http_net_lib.callback.JsonCallback;
 import com.lm.lib.http_net_lib.callback.StringCallback;
 import com.lm.lib.http_net_lib.utilities.UrlHelper;
 
@@ -46,17 +49,19 @@ public class MainActivity extends Activity implements OnClickListener {
 	private void requestJson() {
 		Request request = new Request(UrlHelper.test_json_url,
 				Request.RequestMethod.GET);
-		request.setCallback(new StringCallback() {
+		request.setCallback(new JsonCallback<ArrayList<Entity>>() {
 			@Override
-			public void onSuccess(Object result) {
-				tv.setText((String) result);
+			public void onSuccess(ArrayList<Entity> result) {
+				for (Entity entity : result) {
+					tv.append(entity.city + "\n");
+				}
 			}
 
 			@Override
 			public void onFailure(Exception result) {
 				result.printStackTrace();
 			}
-		});
+		}.setReturnType(new TypeToken<ArrayList<Entity>>(){}.getType()));
 		request.execute();
 	}
 

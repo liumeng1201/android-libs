@@ -1,15 +1,17 @@
 package com.lm.lib.http_net_lib.callback;
 
-public class JsonCallback extends AbstractCallback {
+import com.lm.lib.http_net_lib.utilities.JsonParser;
+
+public abstract class JsonCallback<T> extends AbstractCallback<T> {
 
 	@Override
-	public void onFailure(Exception result) {
-
-	}
-
-	@Override
-	public void onSuccess(Object result) {
-
+	protected T bindData(String content) {
+		if (returnClass != null) {
+			return JsonParser.deserializeByJson(content, returnClass);
+		} else if (returnType != null) {
+			return JsonParser.deserializeByJson(content, returnType);
+		}
+		return null;
 	}
 
 }
