@@ -2,6 +2,8 @@ package com.lm.lib.http_net_lib;
 
 import org.apache.http.HttpResponse;
 
+import com.lm.lib.http_net_lib.interfaces.IProgressListener;
+
 import android.os.AsyncTask;
 
 public class RequestTask extends AsyncTask<Object, Integer, Object> {
@@ -21,7 +23,16 @@ public class RequestTask extends AsyncTask<Object, Integer, Object> {
 	protected Object doInBackground(Object... params) {
 		try {
 			HttpResponse response = HttpClientUtil.execute(request);
-			return request.callback.handle(response);
+			if (request.mProgressListener != null) {
+				return request.callback.handle(response, new IProgressListener() {
+					@Override
+					public void onProgressUpdate(int curPos, int contentLength) {
+						publishProgress(curPos, contentLength);
+					}
+				});
+			} else {
+				return request.callback.handle(response, null);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -31,6 +42,9 @@ public class RequestTask extends AsyncTask<Object, Integer, Object> {
 	@Override
 	protected void onProgressUpdate(Integer... values) {
 		super.onProgressUpdate(values);
+		if (request.mProgressListener != null) {
+			request.mProgressListener.onProgressUpdate(values[0], values[1]);
+		}
 	}
 
 	@Override

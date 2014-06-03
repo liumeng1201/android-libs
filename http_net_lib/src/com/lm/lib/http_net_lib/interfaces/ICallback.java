@@ -5,5 +5,5 @@ import org.apache.http.HttpResponse;
 public interface ICallback<T> {
 	void onFailure(Exception result);
 	void onSuccess(T result);
-	Object handle(HttpResponse response);
+	Object handle(HttpResponse response, IProgressListener mProgressListener);
 }

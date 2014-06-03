@@ -11,6 +11,7 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 
 import com.lm.lib.http_net_lib.interfaces.ICallback;
+import com.lm.lib.http_net_lib.interfaces.IProgressListener;
 
 public class Request {
 	public enum RequestMethod {
@@ -24,6 +25,7 @@ public class Request {
 	public HttpEntity entity;
 	public static final String ENCODING = "UTF-8";
 	public ICallback callback;
+	public IProgressListener mProgressListener;
 	
 	public Request(String url, RequestMethod method) {
 		this.url = url;
@@ -57,5 +59,9 @@ public class Request {
 	public void execute() {
 		RequestTask task = new RequestTask(this);
 		task.execute();
+	}
+	
+	public void setProgressListener(IProgressListener listener) {
+		this.mProgressListener = listener;
 	}
 }

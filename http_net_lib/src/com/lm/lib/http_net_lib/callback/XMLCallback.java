@@ -1,15 +1,15 @@
 package com.lm.lib.http_net_lib.callback;
 
-public class XMLCallback extends AbstractCallback {
+public abstract class XMLCallback extends AbstractCallback {
 
 	@Override
 	public void onFailure(Exception result) {
-
+		
 	}
 
 	@Override
 	public void onSuccess(Object result) {
-
+		
 	}
-
+	
 }

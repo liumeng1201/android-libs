@@ -15,6 +15,7 @@ import org.apache.http.util.EntityUtils;
 
 import com.lm.lib.http_net_lib.Request;
 import com.lm.lib.http_net_lib.interfaces.ICallback;
+import com.lm.lib.http_net_lib.interfaces.IProgressListener;
 import com.lm.lib.http_net_lib.utilities.TextUtil;
 
 public abstract class AbstractCallback<T> implements ICallback<T> {
@@ -23,7 +24,7 @@ public abstract class AbstractCallback<T> implements ICallback<T> {
 	public Type returnType;
 	public String path;
 
-	public Object handle(HttpResponse response) {
+	public Object handle(HttpResponse response, IProgressListener mProgressListener) {
 		// file, json, xml, image, string
 		try {
 			HttpEntity entity = response.getEntity();
@@ -47,8 +48,15 @@ public abstract class AbstractCallback<T> implements ICallback<T> {
 					}
 					byte[] b = new byte[IO_BUFFER_SIZE];
 					int read;
+					long currentPos = 0;
+					long length = entity.getContentLength();
 					while ((read = in.read(b)) != -1) {
-						// TODO update progress
+						if (mProgressListener != null) {
+							currentPos += read;
+							mProgressListener.onProgressUpdate(
+									(int) (currentPos / 1024),
+									(int) (length / 1024));
+						}
 						fos.write(b, 0, read);
 					}
 					fos.flush();

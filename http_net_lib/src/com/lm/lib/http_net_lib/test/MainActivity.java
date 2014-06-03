@@ -16,6 +16,7 @@ import com.lm.lib.http_net_lib.R;
 import com.lm.lib.http_net_lib.Request;
 import com.lm.lib.http_net_lib.callback.JsonCallback;
 import com.lm.lib.http_net_lib.callback.StringCallback;
+import com.lm.lib.http_net_lib.interfaces.IProgressListener;
 import com.lm.lib.http_net_lib.utilities.UrlHelper;
 
 public class MainActivity extends Activity implements OnClickListener {
@@ -47,6 +48,9 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 
 	private void requestJson() {
+		String path = Environment.getExternalStorageDirectory()
+				+ File.separator + "test.txt";
+		
 		Request request = new Request(UrlHelper.test_json_url,
 				Request.RequestMethod.GET);
 		request.setCallback(new JsonCallback<ArrayList<Entity>>() {
@@ -61,7 +65,13 @@ public class MainActivity extends Activity implements OnClickListener {
 			public void onFailure(Exception result) {
 				result.printStackTrace();
 			}
-		}.setReturnType(new TypeToken<ArrayList<Entity>>(){}.getType()));
+		}.setReturnType(new TypeToken<ArrayList<Entity>>(){}.getType()).setPath(path));
+		request.setProgressListener(new IProgressListener() {
+			@Override
+			public void onProgressUpdate(int curPos, int contentLength) {
+				System.out.println("currentPosition = " + curPos + ", contentLength = " + contentLength);
+			}
+		});
 		request.execute();
 	}
 
