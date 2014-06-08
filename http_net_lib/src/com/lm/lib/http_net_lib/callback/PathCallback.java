@@ -1,15 +1,8 @@
 package com.lm.lib.http_net_lib.callback;
 
-public abstract class PathCallback extends AbstractCallback {
-
+public abstract class PathCallback extends AbstractCallback<String> {
 	@Override
-	public void onFailure(Exception result) {
-
+	protected String bindData(String content) {
+		return path;
 	}
-
-	@Override
-	public void onSuccess(Object result) {
-
-	}
-
 }

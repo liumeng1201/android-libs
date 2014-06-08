@@ -26,12 +26,13 @@ public class Request {
 	public static final String ENCODING = "UTF-8";
 	public ICallback callback;
 	public IProgressListener mProgressListener;
-	
+	public RequestTask task;
+
 	public Request(String url, RequestMethod method) {
 		this.url = url;
 		this.method = method;
 	}
-	
+
 	public void setEntity(ArrayList<NameValuePair> forms) {
 		try {
 			entity = new UrlEncodedFormEntity(forms, ENCODING);
@@ -39,7 +40,7 @@ public class Request {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void setEntity(String postContent) {
 		try {
 			entity = new StringEntity(postContent, ENCODING);
@@ -47,21 +48,30 @@ public class Request {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void setEntity(byte[] bytes) {
 		entity = new ByteArrayEntity(bytes);
 	}
-	
+
 	public void setCallback(ICallback callback) {
 		this.callback = callback;
 	}
 
 	public void execute() {
-		RequestTask task = new RequestTask(this);
+		task = new RequestTask(this);
 		task.execute();
 	}
-	
+
 	public void setProgressListener(IProgressListener listener) {
 		this.mProgressListener = listener;
+	}
+
+	public void cancel() {
+		if (task != null) {
+			task.cancel(true);
+		}
+//		if (callback != null) {
+//			callback.cancel();
+//		}
 	}
 }

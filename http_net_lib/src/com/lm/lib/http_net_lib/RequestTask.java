@@ -60,6 +60,9 @@ public class RequestTask extends AsyncTask<Object, Integer, Object> {
 	@Override
 	protected void onCancelled() {
 		super.onCancelled();
+		if (request.callback != null) {
+			request.callback.cancel();
+		}
 	}
 
 }

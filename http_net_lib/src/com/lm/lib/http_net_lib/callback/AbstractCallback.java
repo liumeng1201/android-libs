@@ -13,7 +13,9 @@ import org.apache.http.HttpStatus;
 import org.apache.http.ParseException;
 import org.apache.http.util.EntityUtils;
 
+import com.lm.lib.http_net_lib.AppException;
 import com.lm.lib.http_net_lib.Request;
+import com.lm.lib.http_net_lib.AppException.EnumException;
 import com.lm.lib.http_net_lib.interfaces.ICallback;
 import com.lm.lib.http_net_lib.interfaces.IProgressListener;
 import com.lm.lib.http_net_lib.utilities.TextUtil;
@@ -23,9 +25,19 @@ public abstract class AbstractCallback<T> implements ICallback<T> {
 	public Class<T> returnClass;
 	public Type returnType;
 	public String path;
+	
+	protected boolean isCancelled;
+	
+	@Override
+	public void checkIfCancelled() throws AppException {
+		if (isCancelled) {
+			throw new AppException(EnumException.CancelException, "request has been cancelled");
+		}
+	}
 
-	public Object handle(HttpResponse response, IProgressListener mProgressListener) {
+	public T handle(HttpResponse response, IProgressListener mProgressListener) throws AppException {
 		// file, json, xml, image, string
+		checkIfCancelled();
 		try {
 			HttpEntity entity = response.getEntity();
 
@@ -51,6 +63,7 @@ public abstract class AbstractCallback<T> implements ICallback<T> {
 					long currentPos = 0;
 					long length = entity.getContentLength();
 					while ((read = in.read(b)) != -1) {
+						checkIfCancelled();
 						if (mProgressListener != null) {
 							currentPos += read;
 							mProgressListener.onProgressUpdate(
@@ -71,14 +84,14 @@ public abstract class AbstractCallback<T> implements ICallback<T> {
 			}
 			return null;
 		} catch (ParseException e) {
-			e.printStackTrace();
+			throw new AppException(EnumException.ParseException, e.getMessage());
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new AppException(EnumException.IOException, e.getMessage());
 		}
-		return null;
 	}
 
-	protected T bindData(String content) {
+	protected T bindData(String content) throws AppException {
+		checkIfCancelled();
 		return null;
 	}
 
@@ -95,5 +108,9 @@ public abstract class AbstractCallback<T> implements ICallback<T> {
 	public AbstractCallback<T> setReturnType(Type type) {
 		this.returnType = type;
 		return this;
+	}
+	
+	public void cancel() {
+		isCancelled = true;
 	}
 }

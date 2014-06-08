@@ -15,6 +15,7 @@ import com.google.gson.reflect.TypeToken;
 import com.lm.lib.http_net_lib.R;
 import com.lm.lib.http_net_lib.Request;
 import com.lm.lib.http_net_lib.callback.JsonCallback;
+import com.lm.lib.http_net_lib.callback.PathCallback;
 import com.lm.lib.http_net_lib.callback.StringCallback;
 import com.lm.lib.http_net_lib.interfaces.IProgressListener;
 import com.lm.lib.http_net_lib.utilities.UrlHelper;
@@ -42,7 +43,8 @@ public class MainActivity extends Activity implements OnClickListener {
 			requestString();
 			break;
 		case R.id.btnJson:
-			requestJson();
+			// requestJson();
+			testCancel();
 			break;
 		}
 	}
@@ -50,7 +52,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private void requestJson() {
 		String path = Environment.getExternalStorageDirectory()
 				+ File.separator + "test.txt";
-		
+
 		Request request = new Request(UrlHelper.test_json_url,
 				Request.RequestMethod.GET);
 		request.setCallback(new JsonCallback<ArrayList<Entity>>() {
@@ -65,11 +67,43 @@ public class MainActivity extends Activity implements OnClickListener {
 			public void onFailure(Exception result) {
 				result.printStackTrace();
 			}
-		}.setReturnType(new TypeToken<ArrayList<Entity>>(){}.getType()).setPath(path));
+		}.setReturnType(new TypeToken<ArrayList<Entity>>() {
+		}.getType()).setPath(path));
 		request.setProgressListener(new IProgressListener() {
 			@Override
 			public void onProgressUpdate(int curPos, int contentLength) {
-				System.out.println("currentPosition = " + curPos + ", contentLength = " + contentLength);
+				System.out.println("currentPosition = " + curPos
+						+ ", contentLength = " + contentLength);
+			}
+		});
+		request.execute();
+	}
+
+	private void testCancel() {
+		String path = Environment.getExternalStorageDirectory()
+				+ File.separator + "test.jpg";
+
+		final Request request = new Request(
+				"http://c.hiphotos.baidu.com/image/w%3D2048%3Bq%3D90/sign=609e52020ed79123e0e09374990c62f3/962bd40735fae6cdd197a96b0db30f2442a70f9c.jpg",
+				Request.RequestMethod.GET);
+		request.setCallback(new PathCallback() {
+			@Override
+			public void onSuccess(String result) {
+			}
+
+			@Override
+			public void onFailure(Exception result) {
+				result.printStackTrace();
+			}
+		}.setPath(path));
+		request.setProgressListener(new IProgressListener() {
+			@Override
+			public void onProgressUpdate(int curPos, int contentLength) {
+				System.out.println("currentPosition = " + curPos
+						+ ", contentLength = " + contentLength);
+				if (curPos > 2) {
+					request.cancel();
+				}
 			}
 		});
 		request.execute();
