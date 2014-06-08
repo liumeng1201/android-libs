@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:layout_margin="5dp"
     android:orientation="vertical"
-    tools:context="com.lm.lib.http_net_lib.test.MainActivity" >
+    tools:context="com.lm.lib.http_net_lib.MainActivity" >
 
     <LinearLayout
         android:layout_width="match_parent"

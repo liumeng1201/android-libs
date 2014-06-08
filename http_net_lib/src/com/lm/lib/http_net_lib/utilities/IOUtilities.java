@@ -1,10 +1,16 @@
 package com.lm.lib.http_net_lib.utilities;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+import com.lm.lib.http_net_lib.AppException;
+import com.lm.lib.http_net_lib.AppException.EnumException;
 
 public class IOUtilities {
 	
@@ -41,5 +47,21 @@ public class IOUtilities {
 			}
 		}
 		return null;
+	}
+
+	public static String readStreamToMemory(InputStream in) throws AppException {
+		String result = "";
+		String inputLine = null;
+		try {
+			InputStreamReader reader = new InputStreamReader(in);
+			BufferedReader buffer = new BufferedReader(reader);
+			while ((inputLine = buffer.readLine()) != null) {
+				result += inputLine + "\n";
+			}
+			reader.close();
+			return result;
+		} catch (IOException e) {
+			throw new AppException(EnumException.IOException, e.getMessage());
+		}
 	}
 }

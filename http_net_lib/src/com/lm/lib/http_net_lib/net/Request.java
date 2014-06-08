@@ -1,4 +1,4 @@
-package com.lm.lib.http_net_lib;
+package com.lm.lib.http_net_lib.net;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -20,6 +20,7 @@ public class Request {
 
 	public RequestMethod method;
 	public String url;
+	public String urlParameters;
 	public String postContent;
 	public Map<String, String> headers;
 	public HttpEntity entity;
@@ -27,6 +28,10 @@ public class Request {
 	public ICallback callback;
 	public IProgressListener mProgressListener;
 	public RequestTask task;
+	public RequestTool tool;
+	public enum RequestTool {
+		HTTPCLIENT, HTTPURLCONNECTION
+	}
 
 	public Request(String url, RequestMethod method) {
 		this.url = url;

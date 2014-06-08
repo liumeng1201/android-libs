@@ -1,9 +1,12 @@
 package com.lm.lib.http_net_lib.callback;
 
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -13,41 +16,50 @@ import org.apache.http.HttpStatus;
 import org.apache.http.ParseException;
 import org.apache.http.util.EntityUtils;
 
+import android.provider.UserDictionary;
+
 import com.lm.lib.http_net_lib.AppException;
-import com.lm.lib.http_net_lib.Request;
 import com.lm.lib.http_net_lib.AppException.EnumException;
 import com.lm.lib.http_net_lib.interfaces.ICallback;
 import com.lm.lib.http_net_lib.interfaces.IProgressListener;
+import com.lm.lib.http_net_lib.net.Request;
+import com.lm.lib.http_net_lib.utilities.IOUtilities;
 import com.lm.lib.http_net_lib.utilities.TextUtil;
+import com.lm.lib.http_net_lib.utilities.UserInfo;
 
 public abstract class AbstractCallback<T> implements ICallback<T> {
 	public static final int IO_BUFFER_SIZE = 4 * 1024;
 	public Class<T> returnClass;
 	public Type returnType;
 	public String path;
-	
+
 	protected boolean isCancelled;
-	
+
 	@Override
 	public void checkIfCancelled() throws AppException {
 		if (isCancelled) {
-			throw new AppException(EnumException.CancelException, "request has been cancelled");
+			throw new AppException(EnumException.CancelException,
+					"request has been cancelled");
 		}
 	}
 
-	public T handle(HttpResponse response, IProgressListener mProgressListener) throws AppException {
+	public T handle(HttpResponse response, IProgressListener mProgressListener)
+			throws AppException {
 		// file, json, xml, image, string
 		checkIfCancelled();
 		try {
 			HttpEntity entity = response.getEntity();
 
-			switch (response.getStatusLine().getStatusCode()) {
+			int statusCode = response.getStatusLine().getStatusCode();
+			switch (statusCode) {
 			case HttpStatus.SC_OK:
+			case HttpStatus.SC_CREATED:
 				if (TextUtil.isValidate(path)) {
 					FileOutputStream fos = new FileOutputStream(path);
 					InputStream in = null;
 					if (entity.getContentEncoding() != null) {
-						String encoding = entity.getContentEncoding().getValue();
+						String encoding = entity.getContentEncoding()
+								.getValue();
 						if (encoding != null
 								&& "gzip".equalsIgnoreCase(encoding)) {
 							in = new GZIPInputStream(entity.getContent());
@@ -77,12 +89,18 @@ public abstract class AbstractCallback<T> implements ICallback<T> {
 					in.close();
 					return bindData(path);
 				} else {
-					return bindData(EntityUtils.toString(entity, Request.ENCODING));
+					return bindData(EntityUtils.toString(entity,
+							Request.ENCODING));
 				}
 			default:
-				break;
+				UserInfo errorInfo = new UserInfo();
+				if (entity != null) {
+					errorInfo.putInfo(UserInfo.CLOUD_RESPONSE_BODY,
+							EntityUtils.toString(entity));
+				}
+				errorInfo.putInfo(UserInfo.CLOUD_RESPONSE_STATUS_CODE, statusCode);
+				throw new AppException(EnumException.CloudException, response.getStatusLine().getReasonPhrase(), errorInfo);
 			}
-			return null;
 		} catch (ParseException e) {
 			throw new AppException(EnumException.ParseException, e.getMessage());
 		} catch (IOException e) {
@@ -90,26 +108,96 @@ public abstract class AbstractCallback<T> implements ICallback<T> {
 		}
 	}
 
+	@Override
+	public T handle(HttpURLConnection response,
+			IProgressListener mProgressListener) throws AppException {
+		checkIfCancelled();
+		int statusCode = -1;
+		InputStream in = null;
+		try {
+			statusCode = response.getResponseCode();
+			long contentLength = response.getContentLength();
+			switch (statusCode) {
+			case HttpStatus.SC_OK:
+			case HttpStatus.SC_CREATED:
+				String encoding = response.getContentEncoding();
+				if (encoding != null && "gzip".equalsIgnoreCase(encoding)) {
+					in = new GZIPInputStream(response.getInputStream());
+				} else if (encoding != null && "default".equalsIgnoreCase(encoding)) {
+					in = new InflaterInputStream(response.getInputStream());
+				} else {
+					in = response.getInputStream();
+				}
+				if (!TextUtil.isValidate(path)) {
+					FileOutputStream fos = new FileOutputStream(path);
+					byte[] b = new byte[IO_BUFFER_SIZE];
+					int curPos = 0;
+					int read;
+					while ((read = in.read(b)) != -1) {
+						checkIfCancelled();
+						if (mProgressListener != null) {
+							curPos += read;
+							mProgressListener.onProgressUpdate(curPos / 1024, (int)contentLength / 1024);
+						}
+						fos.write(b, 0, read);
+					}
+					fos.flush();
+					fos.close();
+					in.close();
+					return bindData(path);
+				} else {
+					return bindData(IOUtilities.readStreamToMemory(in));
+				}
+			default:
+				UserInfo errorInfo = new UserInfo();
+				errorInfo.putInfo(UserInfo.CLOUD_RESPONSE_STATUS_CODE, statusCode);
+				errorInfo.putInfo(UserInfo.CLOUD_RESPONSE_BODY, IOUtilities.readStreamToMemory(response.getErrorStream()));
+				throw new AppException(EnumException.CloudException, response.getResponseMessage(), errorInfo);
+			}
+		} catch (FileNotFoundException e) {
+			throw new AppException(EnumException.FileException, e.getMessage());
+		} catch (IOException e) {
+			throw new AppException(EnumException.ConnectionException, e.getMessage());
+		}
+	}
+	
 	protected T bindData(String content) throws AppException {
 		checkIfCancelled();
 		return null;
+	}
+	
+	public T onPreHandle(T object) {
+		// 在数据被正式返回前做一些操作,如插入数据库/过滤不需要的数据等
+		return object;
+	}
+	
+	@Override
+	public T onPreRequest() {
+		// 请求网络之前可以做本地数据查询,若本地查询到则步请求网络
+		return null;
+	}
+
+	@Override
+	public boolean onPrepareParams(OutputStream out) throws AppException {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	public AbstractCallback<T> setPath(String path) {
 		this.path = path;
 		return this;
 	}
-	
+
 	public AbstractCallback<T> setReturnClass(Class<T> returnClass) {
 		this.returnClass = returnClass;
 		return this;
 	}
-	
+
 	public AbstractCallback<T> setReturnType(Type type) {
 		this.returnType = type;
 		return this;
 	}
-	
+
 	public void cancel() {
 		isCancelled = true;
 	}

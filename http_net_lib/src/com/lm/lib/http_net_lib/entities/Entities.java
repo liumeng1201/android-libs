@@ -1,4 +1,4 @@
-package com.lm.lib.http_net_lib.test;
+package com.lm.lib.http_net_lib.entities;
 
 import java.util.ArrayList;
 

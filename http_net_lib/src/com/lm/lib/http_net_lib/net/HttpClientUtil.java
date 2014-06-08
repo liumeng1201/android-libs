@@ -1,4 +1,4 @@
-package com.lm.lib.http_net_lib;
+package com.lm.lib.http_net_lib.net;
 
 import java.io.IOException;
 import java.util.Map;
@@ -12,6 +12,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
 
+import com.lm.lib.http_net_lib.AppException;
 import com.lm.lib.http_net_lib.AppException.EnumException;
 
 public class HttpClientUtil {

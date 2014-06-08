@@ -1,6 +1,7 @@
-package com.lm.lib.http_net_lib.test;
+package com.lm.lib.http_net_lib;
 
 import java.io.File;
+import java.io.OutputStream;
 import java.util.ArrayList;
 
 import android.app.Activity;
@@ -12,13 +13,15 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.google.gson.reflect.TypeToken;
-import com.lm.lib.http_net_lib.R;
-import com.lm.lib.http_net_lib.Request;
 import com.lm.lib.http_net_lib.callback.JsonCallback;
 import com.lm.lib.http_net_lib.callback.PathCallback;
 import com.lm.lib.http_net_lib.callback.StringCallback;
+import com.lm.lib.http_net_lib.entities.Entity;
 import com.lm.lib.http_net_lib.interfaces.IProgressListener;
+import com.lm.lib.http_net_lib.net.Request;
+import com.lm.lib.http_net_lib.utilities.UploadUtil;
 import com.lm.lib.http_net_lib.utilities.UrlHelper;
+import com.lm.lib.http_net_lib.utilities.UserInfo;
 
 public class MainActivity extends Activity implements OnClickListener {
 	private Button btnString, btnJson;
@@ -49,7 +52,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		}
 	}
 
-	private void requestJson() {
+	private void requestJson(final String filePath) {
 		String path = Environment.getExternalStorageDirectory()
 				+ File.separator + "test.txt";
 
@@ -64,9 +67,30 @@ public class MainActivity extends Activity implements OnClickListener {
 			}
 
 			@Override
-			public void onFailure(Exception result) {
+			public void onFailure(AppException result) {
+				result.getErrorInfo().getInt(UserInfo.CLOUD_RESPONSE_STATUS_CODE);
 				result.printStackTrace();
 			}
+
+			@Override
+			public ArrayList<Entity> onPreHandle(ArrayList<Entity> object) {
+				// 将数据插入数据库
+				return super.onPreHandle(object);
+			}
+
+			@Override
+			public ArrayList<Entity> onPreRequest() {
+				// 查询数据库是否已有数据
+				return super.onPreRequest();
+			}
+
+			@Override
+			public boolean onPrepareParams(OutputStream out)
+					throws AppException {
+				UploadUtil.upload(out, filePath);
+				return super.onPrepareParams(out);
+			}
+			
 		}.setReturnType(new TypeToken<ArrayList<Entity>>() {
 		}.getType()).setPath(path));
 		request.setProgressListener(new IProgressListener() {
@@ -92,7 +116,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			}
 
 			@Override
-			public void onFailure(Exception result) {
+			public void onFailure(AppException result) {
 				result.printStackTrace();
 			}
 		}.setPath(path));
@@ -121,7 +145,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			}
 
 			@Override
-			public void onFailure(Exception result) {
+			public void onFailure(AppException result) {
 				result.printStackTrace();
 			}
 		}.setPath(path));
